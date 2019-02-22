@@ -1,96 +1,91 @@
 from random import *
 
-running=True
-easy_words = []
-normal_words = []
-hard_words = []
-game_mode = ""
-mystery_word = ""
-current_letters = []
-guesses_left = 8
-guesses = []
+states = {'game_mode' : "", 'mystery_word' : "", 'current_letters' : [], 'guesses_left' : 8, 'guesses' : [], 'running' : False, 'cl_print' : '', 'easy_words' : [], 'normal_words' : [], 'hard_words' : []}
 
-with open("words.txt") as all_words:
-        line = all_words.readline()
-        while line:            
-            line = line.replace("\n", "")
-            if len(line) > 3 and len(line) < 7:
-                easy_words.append(line)
-            if len(line) > 5 and len(line) < 9:
-                normal_words.append(line)
-            if len(line) > 7:
-                hard_words.append(line)
-            line = all_words.readline()
+letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-mode_choice = input("Select difficulty (Easy, Normal, or Hard): ")
-mode_choice = mode_choice.lower()
-game_mode = mode_choice
+with open('words.txt') as all_words:
+    clean_words = [line.strip() for line in all_words]
+    states['easy_words'] = [word for word in clean_words if len(word) > 3 and len(word) < 7]
+    states['normal_words'] = [word  for word in clean_words if len(word) > 5 and len(word) < 9]
+    states['hard_words'] = [word for word in clean_words if len(word) > 7]
 
-if game_mode == "easy":
-    mystery_word = easy_words[randrange(len(easy_words))].upper()
-if game_mode == "normal":
-    mystery_word = normal_words[randrange(len(normal_words))].upper()
-if game_mode == "hard":
-    mystery_word = hard_words[randrange(len(hard_words))].upper()
+def pick_word(mode):
+    if mode == "easy":
+        return states['easy_words'][randrange(len(states['easy_words']))].upper()
+    if mode == "normal":
+        return states['normal_words'][randrange(len(states['normal_words']))].upper()
+    if mode == "hard":
+        return states['hard_words'][randrange(len(states['hard_words']))].upper()
 
-while running:
+def setup_game(states):
+    states['game_mode'] = input("Select difficulty (Easy, Normal, or Hard): ").lower()
+    while states['game_mode'] != 'easy' and states['game_mode'] != 'normal' and states['game_mode'] != 'hard':
+        states['game_mode'] = input('Mode invalid. Select difficulty (Easy, Normal, or Hard): ').lower()
+    states['mystery_word'] = pick_word(states['game_mode'])    
+    states['current_letters'] = ['_ ' for _ in states['mystery_word']]
+    states['guesses_left'] = 8
+    states['guesses'] = []
+    states['running'] = True
+    return states
 
-    if not current_letters:
-        for i in mystery_word:
-            current_letters.append('_ ')
-
-    cl_print = ""
-    for i in current_letters:
-        cl_print = cl_print + i
+def print_cl(states):
+    states['cl_print'] = ""
+    for i in states['current_letters']:
+        states['cl_print'] = states['cl_print'] + i
     print('')
-    print(cl_print)
+    print(states['cl_print'])
     print('')
-    print("You have", guesses_left, "more lives")
-
-    if cl_print.replace(" ", "") == mystery_word:
+    print("You have", states['guesses_left'], "more lives")
+    return states
+    
+def win_check(states):
+    states['cl_print'] = ""
+    for i in states['current_letters']:
+        states['cl_print'] = states['cl_print'] + i    
+    if states['cl_print'].replace(" ", "") == states['mystery_word']:
+        print('')
+        print(states['cl_print'])
         print('')
         print("You Win!") 
-        running = False
-        # break
+        states['running'] = False
 
-    guess = input("Guess a letter: ").upper()
-
-    if guess not in guesses:
-        guesses.append(guess)
-
-        if guess not in mystery_word:
+def guess_check(guess, states):
+    if guess not in states['guesses']:
+        states['guesses'].append(guess)
+        if guess not in states['mystery_word']:
             print('')
             print("Nope!")
-            guesses_left -= 1
-            if guesses_left == 0:
+            states['guesses_left'] -= 1
+            if states['guesses_left'] == 0:
+                print('')
+                print(states['cl_print'])
+                print('')
                 print("You Lose!")
-                running = False
-        
+                states['running'] = False
+                return states        
         else:
             i = 0
-            while i < len(mystery_word):
-                if mystery_word[i] == guess:
-                    current_letters[i] = f"{guess} "
+            while i < len(states['mystery_word']):
+                if states['mystery_word'][i] == guess:
+                    states['current_letters'][i] = f"{guess} "
                 i += 1
-
+            return states
     else:
         print('')
         print("You already guessed that letter.")
+        pass
 
-    if not running:
+setup_game(states)
+
+while states['running']:
+    print_cl(states)
+    guess = input("Guess a letter: ").upper()
+    while not guess or len(guess) > 1 or guess not in letters:
+        guess = input("Guess invalid. Guess again: ").upper()
+    guess_check(guess, states)
+    win_check(states)
+    if not states['running']:
         if input("Would you like to play again? (Y or N): ").upper() == "Y":
-                mode_choice = input("Select difficulty (Easy, Normal, or Hard): ")
-                mode_choice = mode_choice.lower()
-                game_mode = mode_choice
-
-                if game_mode == "easy":
-                    mystery_word = easy_words[randrange(len(easy_words))].upper()
-                if game_mode == "normal":
-                    mystery_word = normal_words[randrange(len(normal_words))].upper()
-                if game_mode == "hard":
-                    mystery_word = hard_words[randrange(len(hard_words))].upper()
-
-                current_letters = []
-                guesses_left = 8
-                guesses = []
-                running = True
+            setup_game(states)
+            pick_word(states["game_mode"])
