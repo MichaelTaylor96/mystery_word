@@ -59,7 +59,7 @@ def guess_check(guess, states):
             states['guesses_left'] -= 1
             if states['guesses_left'] == 0:
                 print('')
-                print(states['cl_print'])
+                print(states['mystery_word'])
                 print('')
                 print("You Lose!")
                 states['running'] = False
