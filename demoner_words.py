@@ -32,15 +32,16 @@ def split_pool(word_pool, guess):
         else:
             sub_pools[pool_key] = [word]
     sorted_pools = sorted(sub_pools, key=lambda k: len(sub_pools[k]), reverse=True)
-    return (sorted_pools[0], sub_pools[sorted_pools[0]])
+    return (sub_pools[sorted_pools[0]])
 
 def smallest_bigpool(word_pool):
     letters = 'abcdefghijklmnopqurstuvwxyz'
-    letters_pools = {}
+    letters_pool_length = {}
     for i in letters:
         i_words = split_pool(word_pool, i)
-        letters_pools[i] = i_words
-    return len(sorted(letters_pools, key = lambda k: len(letters_pools[k]))[1])
+        letters_pool_length[i] = len(i_words)
+    best_letter_for_player = sorted(letters_pool_length, key = lambda k: letters_pool_length[k])[0]
+    return letters_pool_length[best_letter_for_player]
 
 def biggest_smallest_bigpool(word_pool, guess):
     sub_pools = {}
@@ -60,6 +61,7 @@ def biggest_smallest_bigpool(word_pool, guess):
         min_max = smallest_bigpool(sub_pools[i])
         pool_choices[i] = min_max
     sorted_choices = sorted(pool_choices, key=lambda k: pool_choices[k], reverse=True)
+    # print(sorted_choices[0], sub_pools[sorted_choices[0]], sorted_choices[-1], sub_pools[sorted_choices[-1]])
     return (sorted_choices[0], sub_pools[sorted_choices[0]])
 
 def consolidate_keys(old_pool, new_pool):
