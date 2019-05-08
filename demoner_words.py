@@ -1,14 +1,3 @@
-from random import *
-
-starting_words = {'easy_words' : [], 'normal_words' : [], 'hard_words' : []}
-states = {'live' : 0, 'guesses' : '', 'word_pool' : (), 'running' : True}
-
-with open('words.txt') as all_words:
-    clean_words = [line.strip() for line in all_words]
-    starting_words['easy_words'] = [word.lower() for word in clean_words if len(word) > 3 and len(word) < 7]
-    starting_words['normal_words'] = [word.lower() for word in clean_words if len(word) > 5 and len(word) < 9]
-    starting_words['hard_words'] = [word.lower() for word in clean_words if len(word) > 7]
-
 def choose_word_dificulty(game_mode, starting_words):
     return starting_words[f'{game_mode}_words']
 
@@ -61,7 +50,6 @@ def biggest_smallest_bigpool(word_pool, guess):
         min_max = smallest_bigpool(sub_pools[i])
         pool_choices[i] = min_max
     sorted_choices = sorted(pool_choices, key=lambda k: pool_choices[k], reverse=True)
-    # print(sorted_choices[0], sub_pools[sorted_choices[0]], sorted_choices[-1], sub_pools[sorted_choices[-1]])
     return (sorted_choices[0], sub_pools[sorted_choices[0]])
 
 def consolidate_keys(old_pool, new_pool):
@@ -77,35 +65,48 @@ def consolidate_keys(old_pool, new_pool):
         i += 1
     return new_key
 
-initial_list = choose_word_dificulty(input('Enter a difficulty (Easy, Normal, Hard): ').lower(), starting_words)
-states['word_pool'] = setup_pool(pick_word_length(initial_list), initial_list)
-states['lives'] = 8
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
-while states['running']:
-    print()
-    print(states['word_pool'][0].upper())
-    print("Guessed letters:", states['guesses'].upper())
-    print(f"You have {states['lives']} more lives")
-    guess = input('Guess a letter: ').lower()
-    while guess not in letters or guess.upper() in states['guesses']:
-        guess = input('Enter a valid letter: ').lower()
-    states['guesses'] += f"{guess.upper()} "
-    if states['word_pool'][0] == consolidate_keys(states['word_pool'][0], biggest_smallest_bigpool(states['word_pool'], guess)[0]):
-        states['lives'] -= 1
-        if states['lives'] == 0:
-            print(states['word_pool'][1][randrange(len(states['word_pool'][1]))].upper())
-            print('You lose!')
+if __name__ == '__main__':
+    from random import *
+
+    starting_words = {'easy_words' : [], 'normal_words' : [], 'hard_words' : []}
+    states = {'live' : 0, 'guesses' : '', 'word_pool' : (), 'running' : True}
+
+    with open('words.txt') as all_words:
+        clean_words = [line.strip() for line in all_words]
+        starting_words['easy_words'] = [word.lower() for word in clean_words if len(word) > 3 and len(word) < 7]
+        starting_words['normal_words'] = [word.lower() for word in clean_words if len(word) > 5 and len(word) < 9]
+        starting_words['hard_words'] = [word.lower() for word in clean_words if len(word) > 7]
+    
+    initial_list = choose_word_dificulty(input('Enter a difficulty (Easy, Normal, Hard): ').lower(), starting_words)
+    states['word_pool'] = setup_pool(pick_word_length(initial_list), initial_list)
+    states['lives'] = 8
+    letters = 'abcdefghijklmnopqrstuvwxyz'
+
+    while states['running']:
+        print()
+        print(states['word_pool'][0].upper())
+        print("Guessed letters:", states['guesses'].upper())
+        print(f"You have {states['lives']} more lives")
+        guess = input('Guess a letter: ').lower()
+        while guess not in letters or guess.upper() in states['guesses']:
+            guess = input('Enter a valid letter: ').lower()
+        states['guesses'] += f"{guess.upper()} "
+        if states['word_pool'][0] == consolidate_keys(states['word_pool'][0], biggest_smallest_bigpool(states['word_pool'], guess)[0]):
+            states['lives'] -= 1
+            if states['lives'] == 0:
+                print(states['word_pool'][1][randrange(len(states['word_pool'][1]))].upper())
+                print('You lose!')
+                states['running'] = False
+        states['word_pool'] = (consolidate_keys(states['word_pool'][0], biggest_smallest_bigpool(states['word_pool'], guess)[0]), biggest_smallest_bigpool(states['word_pool'], guess)[1])
+        if '_ ' not in states['word_pool'][0]:
+            print(states['word_pool'][0])
+            print('You win!')
             states['running'] = False
-    states['word_pool'] = (consolidate_keys(states['word_pool'][0], biggest_smallest_bigpool(states['word_pool'], guess)[0]), biggest_smallest_bigpool(states['word_pool'], guess)[1])
-    if '_ ' not in states['word_pool'][0]:
-        print(states['word_pool'][0])
-        print('You win!')
-        states['running'] = False
-    if not states['running']:
-        if input('Would you like to play again? (Y / N) ').upper() == 'Y':
-            states['running'] = True
-            initial_list = choose_word_dificulty(input('Enter a difficulty (Easy, Normal, Hard): ').lower(), starting_words)
-            states['word_pool'] = setup_pool(pick_word_length(initial_list), initial_list)
-            states['lives'] = 8
-            states['guesses'] = ''
+        if not states['running']:
+            if input('Would you like to play again? (Y / N) ').upper() == 'Y':
+                states['running'] = True
+                initial_list = choose_word_dificulty(input('Enter a difficulty (Easy, Normal, Hard): ').lower(), starting_words)
+                states['word_pool'] = setup_pool(pick_word_length(initial_list), initial_list)
+                states['lives'] = 8
+                states['guesses'] = ''
